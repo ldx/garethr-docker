@@ -1,3 +1,6 @@
+Gemfile.lock
 pkg
 spec/fixtures
 .rspec_system
+puppet/modules
+.vagrant/

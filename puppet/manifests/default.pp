@@ -1,0 +1,3 @@
+class { 'hiera': }
+
+class { 'docker': }

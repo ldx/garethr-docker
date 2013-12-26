@@ -26,13 +26,14 @@ class docker::install::redhat (
 
   if $docker::install::redhat::manage_kernel {
     package { 'kernel-headers':
-      ensure => 'absent',
-      before => Package['kernel-ml-aufs-headers'],
+      ensure   => 'absent',
+      before   => Package['kernel-ml-aufs-headers'],
+      provider => 'yum',
     }
 
     package { ['kernel-ml-aufs','kernel-ml-aufs-headers']:
-      ensure => 'present',
-      require => Yumrepo['hop5'],
+      ensure   => 'present',
+      require  => [Yumrepo['hop5'],Package['kernel-headers']],
     }
 
     augeas { 'grub-kernel-ml-aufs':

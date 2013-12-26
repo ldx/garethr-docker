@@ -1,0 +1,13 @@
+# This is currently a noop but will be supported in the future.
+forge 'forge.puppetlabs.com'
+
+# Install modules from the Forge
+mod 'puppetlabs/stdlib'
+mod 'puppetlabs/apt'
+mod 'stahnma/epel'
+mod 'hunner/hiera'
+
+# Install ourselves from GitHub
+mod 'docker',
+  :git => 'git://github.com/huit/garethr-docker.git',
+  :ref => 'redhat_support'

@@ -15,4 +15,6 @@ group :development do
   gem "rspec-system-puppet"
   gem "vagrant-wrapper"
   gem "puppet-blacksmith"
+  gem "r10k"
+  gem "iconv"
 end
