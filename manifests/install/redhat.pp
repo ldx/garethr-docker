@@ -9,6 +9,8 @@ class docker::install::redhat (
     fail("RHEL versions earlier than 6.0 are not supported; this system appears to be '${::operatingsystemversion}'.")
   }
 
+  Class['docker::install::redhat'] -> Class['docker::install']
+
   class { 'epel': }
 
   yumrepo { 'hop5':

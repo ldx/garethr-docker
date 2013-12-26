@@ -9,6 +9,8 @@ class docker::install::debian (
   $version,
 ) {
 
+  Class['docker::install::debian'] -> Class['docker::install']
+
   if ($docker::install::debian::use_upstream_apt_source) {
     include apt
     apt::source { 'docker':
