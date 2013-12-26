@@ -25,22 +25,27 @@ class docker::install::redhat (
   }
 
   if $docker::install::redhat::manage_kernel {
-    package { 'kernel-headers':
-      ensure   => 'absent',
-      before   => Package['kernel-ml-aufs-headers'],
-      provider => 'yum',
+    $updated_kernel_pkgs = ['kernel-ml-aufs','kernel-ml-aufs-headers']
+    if (versioncmp($::kernelversion, '3.10.5') < 0) {
+      exec { 'remove-conflicting-kernel-headers':
+        path      => '/usr/sbin:/sbin:/usr/bin:/bin',
+        command   => 'yum -y remove kernel-headers',
+        onlyif    => 'rpm -q kernel-headers',
+        logoutput => 'on_failure',
+        before    => Package[$docker::install::redhat::updated_kernel_pkgs],
+      }
     }
 
-    package { ['kernel-ml-aufs','kernel-ml-aufs-headers']:
-      ensure   => 'present',
-      require  => [Yumrepo['hop5'],Package['kernel-headers']],
+    package { $docker::install::redhat::updated_kernel_pkgs:
+      ensure  => 'present',
+      require => [Yumrepo['hop5']],
     }
 
     augeas { 'grub-kernel-ml-aufs':
-      incl => '/boot/grub/grub.conf',
-      lens => 'Grub.lns',
-      changes => 'set default 0',
-      require => Package['kernel-ml-aufs'],
+      incl      => '/boot/grub/grub.conf',
+      lens      => 'Grub.lns',
+      changes   => 'set default 0',
+      require   => Package['kernel-ml-aufs'],
       subscribe => Package['kernel-ml-aufs'],
     }
   }
