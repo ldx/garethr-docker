@@ -4,55 +4,35 @@
 # official Apt repository. The use of this repository means, this module works
 # only on Debian based distributions.
 #
-class docker::install {
-  validate_string($docker::version)
-  validate_re($::osfamily, '^Debian$', 'This module uses the docker apt repo and only works on Debian systems that support it.')
+class docker::install (
+  $ensure,
+  $apt_source_location,
+  $manage_kernel,
+  $use_upstream_repo,
+  $version,
+) {
+  validate_string($docker::install::version)
   validate_string($::kernelrelease)
-  validate_bool($docker::use_upstream_apt_source)
+  validate_bool($docker::install::use_upstream_repo)
 
-  if ($docker::use_upstream_apt_source) {
-    include apt
-    apt::source { 'docker':
-      location          => $docker::apt_source_location,
-      release           => 'docker',
-      repos             => 'main',
-      required_packages => 'debian-keyring debian-archive-keyring',
-      key               => 'A88D21E9',
-      key_source        => 'http://get.docker.io/gpg',
-      pin               => '10',
-      include_src       => false,
+  case $::osfamily {
+    'Debian': {
+      class { 'docker::install::debian':
+        ensure                  => $docker::install::ensure,
+        apt_source_location     => $docker::install::apt_source_location,
+        manage_kernel           => $docker::install::manage_kernel,
+        use_upstream_apt_source => $docker::install::use_upstream_repo,
+        version                 => $docker::install::version,
+      }
     }
-
-    Apt::Source['docker'] -> Package['lxc-docker']
-  }
-
-  case $::operatingsystemrelease {
-    # On Ubuntu 12.04 (precise) install the backported 13.04 (raring) kernel
-    '12.04': { $kernelpackage = [
-                                  'linux-image-generic-lts-raring',
-                                  'linux-headers-generic-lts-raring'
-                                ]
+    'RedHat': {
+      class { 'docker::install::redhat':
+        ensure                => $docker::install::ensure,
+        manage_kernel         => $docker::install::manage_kernel,
+      }
     }
-    # determine the package name for 'linux-image-extra-$(uname -r)' based on
-    # the $::kernelrelease fact
-    default: { $kernelpackage = "linux-image-extra-${::kernelrelease}" }
-  }
-
-  if $docker::manage_kernel {
-    package { $kernelpackage:
-      ensure => present,
-      before => Package['lxc-docker'],
+    default: {
+      fail('This module supports only certain Debian and RedHat systems.')
     }
-  }
-
-  if $docker::version {
-    $dockerpackage = "lxc-docker-${docker::version}"
-  } else {
-    $dockerpackage = 'lxc-docker'
-  }
-
-  package { 'lxc-docker':
-    ensure => $docker::ensure,
-    name   => $dockerpackage,
   }
 }

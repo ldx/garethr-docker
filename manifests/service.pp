@@ -18,18 +18,33 @@ class docker::service (
   $service_state        = $docker::service_state,
   $root_dir             = $docker::root_dir,
 ){
-  service { 'docker':
+  case $::osfamily {
+    'RedHat': {
+      $servicename = 'docker'
+      $serviceprovider = 'redhat'
+      $initfile = false
+    }
+    default: {
+      $servicename = 'docker'
+      $serviceprovider = 'upstart'
+      $initfile = true
+    }
+  }
+
+  service { $docker::service::servicename:
     ensure     => $service_state,
     enable     => true,
     hasstatus  => true,
     hasrestart => true,
-    provider   => upstart,
+    provider   => $docker::service::serviceprovider,
   }
 
-  file { '/etc/init/docker.conf':
-    ensure  => present,
-    force   => true,
-    content => template('docker/etc/init/docker.conf.erb'),
-    notify  => Service['docker'],
+  if $docker::service::initfile {
+    file { '/etc/init/docker.conf':
+      ensure  => present,
+      force   => true,
+      content => template('docker/etc/init/docker.conf.erb'),
+      notify  => Service[$docker::service::servicename],
+    }
   }
 }
