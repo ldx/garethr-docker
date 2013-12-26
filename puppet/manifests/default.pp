@@ -2,7 +2,13 @@ class { 'hiera': }
 
 class { 'docker': }
 
-package { 'kernel-ml-aufs-devel':
+$vmware_tools_deps = [
+  'gcc',
+  'make',
+  'kernel-ml-aufs-devel',
+]
+
+package { $vmware_tools_deps:
   ensure  => 'present',
   require => Class['docker'],
 }
