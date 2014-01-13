@@ -39,7 +39,9 @@ define docker::run(
 
   case $::osfamily {
     'Debian': {
-      file { "/etc/init/docker-${title}.conf":
+      $initscript = "/etc/init/docker-${title}.conf"
+
+      file { $initscript:
         ensure  => present,
         content => template('docker/etc/init/docker-run.conf.erb')
       }
@@ -51,11 +53,11 @@ define docker::run(
         hasrestart => true,
         provider   => upstart;
       }
-
-      $initscript = "/etc/init/docker-${title}.conf"
     }
     'RedHat': {
-      file { "/etc/init.d/docker-${title}":
+      $initscript = "/etc/init.d/docker-${title}"
+
+      file { $initscript:
         ensure  => present,
         content => template('docker/etc/init.d/docker-run.erb')
       }->
@@ -63,8 +65,6 @@ define docker::run(
         ensure     => $running,
         enable     => true,
       }
-
-      $initscript = "/etc/init/docker-${title}.conf"
     }
     default: {
       fail('Docker needs a RedHat or Debian based system.')
