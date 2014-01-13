@@ -59,7 +59,8 @@ define docker::run(
 
       file { $initscript:
         ensure  => present,
-        content => template('docker/etc/init.d/docker-run.erb')
+        content => template('docker/etc/init.d/docker-run.erb'),
+        mode    => '0755',
       }->
       service { "docker-${title}":
         ensure     => $running,
