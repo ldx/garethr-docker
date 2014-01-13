@@ -32,10 +32,15 @@ start() {
 
     if ! [ -f $cidfile ]; then
         printf "Starting $prog:\t"
-        $RUN
-        touch $lockfile
-        success
+        $run
+        retval=$?
         echo
+        if [ $retval -eq 0 ]; then
+            touch $lockfile
+            success
+        else
+            failure
+        fi
     else
         failure
         echo
@@ -46,17 +51,16 @@ start() {
 
 stop() {
     if ! [ -f $cidfile ]; then
-	failure
-	echo
-	printf "$cidfile does not exist.\n"
-	exit 7
+        failure
+        echo
+        printf "$cidfile does not exist.\n"
+        exit 7
     else
-	echo -n $"Stopping $prog: "
-    	docker stop $(cat $cidfile)
-    	retval=$?
-    	echo
-    	[ $retval -eq 0 ] && rm -f $lockfile
-    	return $retval
+        echo -n $"Stopping $prog: "
+        docker stop $(cat $cidfile)
+        retval=$?
+        [ $retval -eq 0 ] && rm -f $lockfile $cidfile
+        return $retval
     fi
 }
 
