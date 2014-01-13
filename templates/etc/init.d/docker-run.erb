@@ -29,22 +29,28 @@ lockfile="/var/lock/subsys/$prog"
 start() {
     [ -x $docker ] || exit 5
 
-    if ! [ -f $cidfile ]; then
-        printf "Starting $prog:\t"
-        $docker run -cidfile=$cidfile -d=true <% if @username %>-u '<%= @username %>' <% end %><% if @hostname %>-h '<%= @hostname %>'<% end %><% if @dns %><% @dns_array.each do |address| %> -dns <%= address %><% end %><% end %><% if @env %><% @env_array.each do |env| %> -e <%= env %><% end %><% end %><% if @ports %><% @ports_array.each do |port| %> -p <%= port %><% end %><% end %><% if @volumes %><% @volumes_array.each do |volume| %> -v <%= volume %><% end %><% end %><% if @volumes_from %> -volumes-from <%= @volumes_from %><% end %> -m <%= @memory_limit %> <% if @links %><%= @links_array.map {|link| "-link #{link}" }.join(' ') %> <% end %><% if @use_name %>-name <%= @name %><% end %> <%= @image %> <% if @command %> <%= @command %><% end %>
-        retval=$?
-        echo
+    if [ -f $cidfile ]; then
+        cid="$(cat $cidfile)"
+        retval=$(docker ps|grep $cid)
         if [ $retval -eq 0 ]; then
-            touch $lockfile
-            success
-        else
             failure
+            echo
+            printf "Container $cid is still running.\n"
+            exit 7
+        else
+            rm -f $lockfile $cidfile
         fi
+    fi
+
+    printf "Starting $prog:\t"
+    $docker run -cidfile=$cidfile -d=true <% if @username %>-u '<%= @username %>' <% end %><% if @hostname %>-h '<%= @hostname %>'<% end %><% if @dns %><% @dns_array.each do |address| %> -dns <%= address %><% end %><% end %><% if @env %><% @env_array.each do |env| %> -e <%= env %><% end %><% end %><% if @ports %><% @ports_array.each do |port| %> -p <%= port %><% end %><% end %><% if @volumes %><% @volumes_array.each do |volume| %> -v <%= volume %><% end %><% end %><% if @volumes_from %> -volumes-from <%= @volumes_from %><% end %> -m <%= @memory_limit %> <% if @links %><%= @links_array.map {|link| "-link #{link}" }.join(' ') %> <% end %><% if @use_name %>-name <%= @name %><% end %> <%= @image %> <% if @command %> <%= @command %><% end %>
+    retval=$?
+    echo
+    if [ $retval -eq 0 ]; then
+        touch $lockfile
+        success
     else
         failure
-        echo
-        printf "$cidfile still exists...\n"
-        exit 7
     fi
 }
 
