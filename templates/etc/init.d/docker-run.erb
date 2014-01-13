@@ -31,7 +31,6 @@ start() {
     [ -x $docker ] || exit 5
 
     if ! [ -f $cidfile ]; then
-        prestart
         printf "Starting $prog:\t"
         $RUN
         touch $lockfile
