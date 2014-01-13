@@ -10,9 +10,9 @@ class docker::install {
   validate_string($::kernelrelease)
   validate_bool($docker::use_upstream_package_source)
 
-  if ($docker::use_upstream_package_source) {
-    case $::osfamily {
-      'Debian': {
+  case $::osfamily {
+    'Debian': {
+      if ($docker::use_upstream_package_source) {
         include apt
         apt::source { 'docker':
           location          => $docker::apt_source_location,
@@ -27,35 +27,44 @@ class docker::install {
 
         Apt::Source['docker'] -> Package['lxc-docker']
       }
-    }
-  }
 
-  case $::operatingsystemrelease {
-    # On Ubuntu 12.04 (precise) install the backported 13.04 (raring) kernel
-    '12.04': { $kernelpackage = [
-                                  'linux-image-generic-lts-raring',
-                                  'linux-headers-generic-lts-raring'
-                                ]
+      case $::operatingsystemrelease {
+        # On Ubuntu 12.04 (precise) install the backported 13.04 (raring) kernel
+        '12.04': { $kernelpackage = [
+                                      'linux-image-generic-lts-raring',
+                                      'linux-headers-generic-lts-raring'
+                                    ]
+        }
+        # determine the package name for 'linux-image-extra-$(uname -r)' based on
+        # the $::kernelrelease fact
+        default: { $kernelpackage = "linux-image-extra-${::kernelrelease}" }
+      }
+
+      $dockerbasepkg = 'lxc-docker'
     }
-    # determine the package name for 'linux-image-extra-$(uname -r)' based on
-    # the $::kernelrelease fact
-    default: { $kernelpackage = "linux-image-extra-${::kernelrelease}" }
+    'RedHat': {
+      if versioncmp($::operatingsystemrelease, '6.5') < 0 {
+        fail('Docker needs RedHat/CentOS > 6.5.')
+      }
+
+      $dockerbasepkg = 'docker-io'
+    }
   }
 
   if $docker::manage_kernel {
     package { $kernelpackage:
       ensure => present,
-      before => Package['lxc-docker'],
+      before => Package[$dockerbasepkg],
     }
   }
 
   if $docker::version {
-    $dockerpackage = "lxc-docker-${docker::version}"
+    $dockerpackage = "${dockerbasepkg}-${docker::version}"
   } else {
-    $dockerpackage = 'lxc-docker'
+    $dockerpackage = $dockerbasepkg
   }
 
-  package { 'lxc-docker':
+  package { $dockerbasepkg:
     ensure => $docker::ensure,
     name   => $dockerpackage,
   }
