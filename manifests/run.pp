@@ -72,10 +72,10 @@ define docker::run(
   }
 
   if str2bool($restart_service) {
-    File["/etc/init/docker-${title}.conf"] ~> Service["docker-${title}"]
+    File[$initscript] ~> Service["docker-${title}"]
   }
   else {
-    File["/etc/init/docker-${title}.conf"] -> Service["docker-${title}"]
+    File[$initscript] -> Service["docker-${title}"]
   }
 }
 
