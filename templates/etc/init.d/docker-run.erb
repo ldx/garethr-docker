@@ -31,7 +31,8 @@ start() {
 
     if [ -f $cidfile ]; then
         cid="$(cat $cidfile)"
-        retval=$(docker ps|grep $cid)
+        docker ps|grep $cid
+        retval=$?
         if [ $retval -eq 0 ]; then
             failure
             echo
