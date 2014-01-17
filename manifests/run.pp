@@ -63,7 +63,8 @@ define docker::run(
         ensure  => present,
         content => template('docker/etc/init.d/docker-run.erb'),
         mode    => '0755',
-      }->
+      }
+
       service { "docker-${title}":
         ensure     => $running,
         enable     => true,
