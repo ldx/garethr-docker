@@ -26,6 +26,9 @@
 # [*manage_kernel*]
 #   Attempt to install the correct Kernel required by docker
 #   Defaults to true
+# [*extra_parameters*]
+#   Any extra parameters that should be passed to the docker daemon.
+#   Defaults to undefined
 #
 class docker(
   $version                 = $docker::params::version,
@@ -36,7 +39,8 @@ class docker(
   $package_source_location     = $docker::params::package_source_location,
   $service_state           = $docker::params::service_state,
   $root_dir                = $docker::params::root_dir,
-  $manage_kernel           = true
+  $manage_kernel           = true,
+  $extra_parameters        = undef,
 ) inherits docker::params {
 
   validate_string($version)
