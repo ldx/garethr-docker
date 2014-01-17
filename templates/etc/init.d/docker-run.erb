@@ -31,15 +31,17 @@ start() {
 
     if [ -f $cidfile ]; then
         cid="$(cat $cidfile)"
-        docker ps|grep $cid
-        retval=$?
-        if [ $retval -eq 0 ]; then
-            failure
-            echo
-            printf "Container $cid is still running.\n"
-            exit 7
-        else
-            rm -f $lockfile $cidfile
+        if [ -n $cid ]; then
+            docker ps|grep $cid
+            retval=$?
+            if [ $retval -eq 0 ]; then
+                failure
+                echo
+                printf "Container $cid is still running.\n"
+                exit 7
+            else
+                rm -f $lockfile $cidfile
+            fi
         fi
     fi
 
@@ -87,11 +89,16 @@ stop() {
         printf "$cidfile does not exist.\n"
         exit 7
     else
-        echo -n $"Stopping $prog: "
-        docker stop $(cat $cidfile)
-        retval=$?
-        [ $retval -eq 0 ] && rm -f $lockfile $cidfile
-        return $retval
+        cid="$(cat $cidfile)"
+        if [ -n $cid ]; then
+            echo -n $"Stopping $prog: "
+            docker stop $(cat $cidfile)
+            retval=$?
+            [ $retval -eq 0 ] && rm -f $lockfile $cidfile
+            return $retval
+        else
+            rm $cidfile
+        fi
     fi
 }
 
